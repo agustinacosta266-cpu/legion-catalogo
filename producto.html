@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legión — Producto</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--cream:#F0EDE6;--cream2:#E8E4DC;--black:#111;--gray:#888;--border:#D5D2CB;--wa:#25D366;--white:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--black);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--cream);letter-spacing:2px;cursor:pointer}
+.back-btn{background:transparent;border:0.5px solid rgba(255,255,255,.3);color:var(--cream);border-radius:20px;padding:6px 14px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s}
+.back-btn:hover{border-color:rgba(255,255,255,.7)}
+
+/* LAYOUT DESKTOP: 2 columnas */
+.prod-layout{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:1100px;margin:0 auto}
+
+/* ---- GALERÍA ---- */
+.gallery-section{position:sticky;top:56px;height:calc(100vh - 56px);display:flex;gap:10px;padding:16px;background:var(--white)}
+
+/* Thumbnails verticales (desktop) */
+.thumbs-col{display:flex;flex-direction:column;gap:6px;overflow-y:auto;width:72px;flex-shrink:0}
+.thumbs-col::-webkit-scrollbar{display:none}
+.thumb{width:68px;height:68px;border-radius:6px;object-fit:cover;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0;background:var(--cream2)}
+.thumb.active{border-color:var(--black)}
+
+/* Imagen principal */
+.img-main-wrap{flex:1;position:relative;overflow:hidden;border-radius:10px;background:var(--cream2)}
+.img-main-wrap img{width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;transition:opacity .35s}
+.img-main-wrap img.hidden{opacity:0;pointer-events:none}
+.img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;color:#ccc}
+.img-counter{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.4);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500}
+
+/* ---- INFO ---- */
+.info-section{padding:28px 32px 32px 20px;overflow-y:auto}
+.prod-breadcrumb{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.prod-nombre{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:.5px;line-height:1.05;margin-bottom:14px}
+.prod-precio{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.5px;margin-bottom:6px}
+.prod-precio-sub{font-size:12px;color:var(--gray);margin-bottom:28px;margin-top:4px}
+.prod-precio-ef{font-size:14px;color:#2d7a2d;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:8px}
+.prod-cuotas{font-size:14px;color:#1a5fa8;font-weight:500;margin-top:6px}
+.prod-precio-badge{background:#2d7a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+
+.btn-agregar{width:100%;background:var(--black);color:#fff;border:none;border-radius:10px;padding:16px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;transition:opacity .15s;margin-bottom:12px}
+.btn-agregar:hover{opacity:.85}
+.btn-agregar.en-carrito{background:var(--cream2);color:var(--black)}
+.btn-wa{width:100%;background:var(--wa);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:28px;transition:background .15s}
+.btn-wa:hover{background:#1ebe5c}
+
+/* Acordeones */
+/* TALLES */
+.talles-section{margin-bottom:20px}
+.talles-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.talles-grid{display:flex;flex-wrap:wrap;gap:8px}
+.talle-btn{border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;font-size:14px;font-family:"DM Sans",sans-serif;font-weight:500;cursor:pointer;background:#fff;color:var(--black);transition:all .15s;min-width:44px;text-align:center}
+.talle-btn:hover{border-color:var(--black)}
+.talle-btn.selected{background:var(--black);color:#fff;border-color:var(--black)}
+.talle-aviso{font-size:12px;color:#e74c3c;margin-top:8px;display:none}
+
+.acord{border-top:0.5px solid var(--border)}
+.acord:last-child{border-bottom:0.5px solid var(--border)}
+.acord-btn{width:100%;background:none;border:none;padding:16px 0;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;cursor:pointer;color:var(--black);font-family:'DM Sans',sans-serif;text-align:left}
+.acord-icon{font-size:18px;transition:transform .2s;flex-shrink:0}
+.acord-icon.open{transform:rotate(45deg)}
+.acord-body{font-size:14px;color:#555;line-height:1.7;padding-bottom:16px;display:none}
+.acord-body.open{display:block}
+
+/* ===== MOBILE: una columna ===== */
+@media(max-width:700px){
+  .prod-layout{grid-template-columns:1fr}
+  .gallery-section{position:relative;top:0;height:auto;flex-direction:column;padding:0;gap:0}
+  .thumbs-col{flex-direction:row;width:100%;overflow-x:auto;padding:8px 12px;gap:6px;order:2;border-bottom:0.5px solid var(--border)}
+  .thumb{width:56px;height:56px}
+  .img-main-wrap{width:100%;height:320px;border-radius:0;flex:none}
+  .img-main-wrap img{object-fit:contain}
+  .info-section{padding:20px 16px 32px}
+  .prod-nombre{font-size:26px}
+  .prod-precio{font-size:32px}
+}
+
+/* RELACIONADOS */
+.relacionados{padding:28px 20px 40px;max-width:1100px;margin:0 auto;border-top:0.5px solid var(--border)}
+.rel-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:16px}
+.rel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.rel-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .12s;text-decoration:none}
+.rel-card:hover{border-color:#aaa;transform:translateY(-2px)}
+.rel-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--cream2);display:block}
+.rel-img-ph{width:100%;aspect-ratio:1;background:var(--cream2);display:flex;align-items:center;justify-content:center;font-size:28px;color:#ccc}
+.rel-info{padding:8px 10px 12px}
+.rel-cat{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.rel-nombre{font-size:12px;font-weight:500;color:var(--black);margin-bottom:4px;line-height:1.3}
+.rel-precio{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--black)}
+
+/* FAB carrito */
+.fab{position:fixed;bottom:22px;right:18px;background:var(--black);color:var(--cream);border:none;border-radius:24px;padding:11px 18px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:none;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.22);z-index:50;transition:transform .15s}
+.fab:hover{transform:scale(1.04)}
+.fab.visible{display:flex}
+.fab-badge{background:var(--cream);color:var(--black);border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* SKELETON */
+.skel{background:linear-gradient(90deg,var(--cream2) 25%,var(--cream) 50%,var(--cream2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.error-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px;padding:40px;text-align:center}
+.error-icon{font-size:48px}
+.btn-volver{background:var(--black);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;margin-top:8px}
+
+.footer{background:var(--black);color:var(--cream);text-align:center;padding:18px;font-size:12px;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;opacity:.65}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" onclick="volverAlCatalogo()">Legión</div>
+  <button class="back-btn" onclick="volverAlCatalogo()">← Volver</button>
+</header>
+
+<div id="main-content">
+  <div class="prod-layout">
+    <div class="gallery-section">
+      <div class="img-main-wrap"><div class="img-ph skel" style="height:100%"></div></div>
+    </div>
+    <div class="info-section">
+      <div class="skel" style="height:12px;width:100px;margin-bottom:14px"></div>
+      <div class="skel" style="height:36px;width:80%;margin-bottom:12px"></div>
+      <div class="skel" style="height:44px;width:50%;margin-bottom:28px"></div>
+      <div class="skel" style="height:52px;border-radius:10px;margin-bottom:12px"></div>
+      <div class="skel" style="height:52px;border-radius:10px"></div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="irAlCarrito()">
+  🛍️ Ver pedido <span class="fab-badge" id="fab-count">0</span>
+</button>
+
+<div class="footer">LEGIÓN · CATÁLOGO ONLINE</div>
+
+<script>
+const SUPABASE_URL = "https://mhycunflnwbmtmnvoswr.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oeWN1bmZsbndibXRtbnZvc3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzM1NzIsImV4cCI6MjA5NTY0OTU3Mn0.VgbAYOI7SHbgjy2GaVqewgaUezV-ohfM24N91xshics";
+const WA_NUMBER = "5493854000000";
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let producto = null;
+let talleSeleccionado = null;
+let fotoIdx = 0;
+let carrito = JSON.parse(sessionStorage.getItem("legion_carrito") || "[]");
+
+function guardarCarrito(){ sessionStorage.setItem("legion_carrito", JSON.stringify(carrito)); }
+function volverAlCatalogo(){ window.location.href = "legion-catalogo.html"; }
+function irAlCarrito(){ window.location.href = "legion-catalogo.html#carrito"; }
+
+function actualizarFab(){
+  const fab = document.getElementById("fab");
+  document.getElementById("fab-count").textContent = carrito.length;
+  fab.classList.toggle("visible", carrito.length > 0);
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if(!id){ mostrarError("No se especificó ningún producto."); return; }
+
+  const { data, error } = await db.from("productos").select("*").eq("id", id).single();
+  if(error || !data){ mostrarError("Producto no encontrado."); return; }
+
+  producto = data;
+  document.title = `Legión — ${data.nombre}`;
+  talleSeleccionado = null;
+  renderProducto();
+  cargarRelacionados(data.categoria, data.id);
+  actualizarFab();
+}
+
+function renderProducto(){
+  const p = producto;
+  const fotos = p.fotos || [];
+  const multi = fotos.length > 1;
+  const enCarrito = carrito.find(c => c.id === p.id);
+
+  const thumbsHTML = fotos.length > 1 ? fotos.map((f,i) =>
+    `<img class="thumb ${i===fotoIdx?'active':''}" src="${f}" onclick="setFoto(${i})" alt="Foto ${i+1}" onerror="this.style.display='none'">`
+  ).join("") : "";
+
+  const imgsHTML = fotos.length
+    ? fotos.map((f,i) => `<img src="${f}" class="${i===fotoIdx?'':'hidden'}" alt="${p.nombre}" onerror="this.style.display='none'">`).join("")
+    : `<div class="img-ph">📦</div>`;
+
+  const acordeones = [
+    { titulo: "Descripción del producto", body: p.descripcion || "Sin descripción disponible." },
+    { titulo: "Envíos y cambios", body: "Consultá las condiciones de envío y cambios por WhatsApp." },
+  ].map((a,i) => `
+    <div class="acord">
+      <button class="acord-btn" onclick="toggleAcord(${i})">
+        ${a.titulo} <span class="acord-icon" id="icon-${i}">+</span>
+      </button>
+      <div class="acord-body" id="acord-${i}">${a.body}</div>
+    </div>`
+  ).join("");
+
+  document.getElementById("main-content").innerHTML = `
+    <div class="prod-layout">
+      <div class="gallery-section">
+        ${multi ? `<div class="thumbs-col">${thumbsHTML}</div>` : ""}
+        <div class="img-main-wrap">
+          ${imgsHTML}
+          ${multi ? `<div class="img-counter">${fotoIdx+1} / ${fotos.length}</div>` : ""}
+        </div>
+      </div>
+      <div class="info-section">
+        <div class="prod-breadcrumb">${p.categoria}${p.es_nuevo ? ' &nbsp;<span style="background:#e25c2b;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:.5px">NUEVO</span>' : ''}</div>
+        <div class="prod-nombre">${p.nombre}</div>
+        <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
+        <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
+        <div class="prod-cuotas">💳 3 cuotas sin interés de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
+        <div class="prod-precio-sub">Precio de lista</div>
+        ${(p.talles && p.talles.length) ? `
+        <div class="talles-section">
+          <div class="talles-label">Talle</div>
+          <div class="talles-grid">
+            ${p.talles.map(t => `<button class="talle-btn ${talleSeleccionado===t?'selected':''}" onclick="selectTalle('${t}')">${t}</button>`).join("")}
+          </div>
+          <div class="talle-aviso" id="talle-aviso">Por favor seleccioná un talle</div>
+        </div>` : ""}
+        <button class="btn-agregar ${enCarrito?'en-carrito':''}" id="btn-agregar" onclick="toggleCarrito()">
+          ${enCarrito ? '✓ Agregado — tocá para quitar' : '＋ Agregar al pedido'}
+        </button>
+        <button class="btn-wa" onclick="waEsteProducto()">
+          💬 Consultar por WhatsApp
+        </button>
+        ${acordeones}
+      </div>
+    </div>
+    <div id="relacionados-wrap"></div>
+  `;
+}
+
+function selectTalle(t) {
+  talleSeleccionado = talleSeleccionado === t ? null : t;
+  // Actualizar botones
+  document.querySelectorAll(".talle-btn").forEach(btn => {
+    btn.classList.toggle("selected", btn.textContent === t && talleSeleccionado === t);
+  });
+  document.getElementById("talle-aviso").style.display = "none";
+}
+
+function setFoto(i){
+  fotoIdx = i;
+  // Actualizar imágenes
+  const fotos = producto?.fotos || [];
+  document.querySelectorAll(".img-main-wrap img").forEach((img,j) => img.classList.toggle("hidden", j!==i));
+  // Actualizar thumbnails
+  document.querySelectorAll(".thumb").forEach((t,j) => t.classList.toggle("active", j===i));
+  // Actualizar contador
+  const counter = document.querySelector(".img-counter");
+  if(counter) counter.textContent = `${i+1} / ${fotos.length}`;
+}
+
+function toggleCarrito(){
+  if(!producto) return;
+  // Validar talle si el producto tiene talles y no está en carrito aún
+  const yaEnCarrito = carrito.find(c => c.id === producto.id);
+  if(!yaEnCarrito && producto.talles?.length && !talleSeleccionado) {
+    document.getElementById("talle-aviso").style.display = "block";
+    return;
+  }
+  const idx = carrito.findIndex(c => c.id === producto.id);
+  if(idx >= 0) carrito.splice(idx,1);
+  else carrito.push(producto);
+  guardarCarrito();
+  actualizarFab();
+  const btn = document.getElementById("btn-agregar");
+  const enCarrito = carrito.find(c => c.id === producto.id);
+  if(btn){
+    btn.textContent = enCarrito ? '✓ Agregado — tocá para quitar' : '＋ Agregar al pedido';
+    btn.classList.toggle("en-carrito", !!enCarrito);
+  }
+}
+
+function waEsteProducto(){
+  const p = producto;
+  const talleInfo = talleSeleccionado ? ` — Talle: ${talleSeleccionado}` : (producto.talles?.length ? ' — (sin talle seleccionado)' : '');
+  const msg = `Hola Legión! 👋 Me interesa este producto:\n\n• ${p.nombre}${talleInfo} — $${Number(p.precio).toLocaleString('es-AR')}\n\n¿Tienen disponibilidad?`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function toggleAcord(i){
+  const body = document.getElementById(`acord-${i}`);
+  const icon = document.getElementById(`icon-${i}`);
+  const isOpen = body.classList.contains("open");
+  body.classList.toggle("open", !isOpen);
+  icon.classList.toggle("open", !isOpen);
+}
+
+async function cargarRelacionados(categoria, idActual){
+  const { data } = await db.from("productos").select("*").eq("categoria", categoria).eq("disponible", true).neq("id", idActual).limit(4);
+  const wrap = document.getElementById("relacionados-wrap");
+  if(!wrap || !data?.length) return;
+  wrap.innerHTML = `
+    <div class="relacionados">
+      <div class="rel-title">También te puede gustar</div>
+      <div class="rel-grid">
+        ${data.map(p => `
+          <a class="rel-card" href="producto.html?id=${p.id}">
+            ${p.fotos?.length ? `<img class="rel-img" src="${p.fotos[0]}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">` : `<div class="rel-img-ph">📦</div>`}
+            <div class="rel-info">
+              <div class="rel-cat">${p.categoria}</div>
+              <div class="rel-nombre">${p.nombre}</div>
+              <div class="rel-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
+            </div>
+          </a>`).join("")}
+      </div>
+    </div>`;
+}
+
+function mostrarError(msg){
+  document.getElementById("main-content").innerHTML = `
+    <div class="error-wrap">
+      <div class="error-icon">😕</div>
+      <div style="font-size:15px;color:var(--gray)">${msg}</div>
+      <button class="btn-volver" onclick="volverAlCatalogo()">Volver al catálogo</button>
+    </div>`;
+}
+
+// Swipe mobile entre fotos
+let touchX = 0;
+document.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const diff = touchX - e.changedTouches[0].clientX;
+  const fotos = producto?.fotos || [];
+  if(Math.abs(diff) > 50 && fotos.length > 1){
+    const newIdx = (fotoIdx + (diff > 0 ? 1 : -1) + fotos.length) % fotos.length;
+    setFoto(newIdx);
+  }
+});
+
+init();
+</script>
+</body>
+</html>

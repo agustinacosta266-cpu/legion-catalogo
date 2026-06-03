@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legión — Catálogo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--cream:#F0EDE6;--cream2:#E8E4DC;--black:#111;--gray:#888;--border:#D5D2CB;--wa:#25D366;--white:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--black);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--cream);letter-spacing:2px;display:flex;align-items:center;gap:4px;cursor:pointer}
+.logo-dot{width:7px;height:7px;background:var(--cream);border-radius:50%;margin-bottom:16px}
+.cart-btn{background:var(--cream);color:var(--black);border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:opacity .15s}
+.cart-btn:hover{opacity:.85}
+.cart-badge{background:var(--black);color:var(--cream);border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:transform .2s}
+.cart-badge.bump{transform:scale(1.35)}
+
+/* BANNER */
+.banner{background:var(--black);color:var(--cream);padding:40px 24px 36px;text-align:center;position:relative;overflow:hidden}
+.banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(255,255,255,.06) 0%,transparent 70%)}
+.banner-logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;line-height:1;margin-bottom:8px}
+.banner-logo-dot{display:inline-block;width:10px;height:10px;background:var(--cream);border-radius:50%;margin-left:4px;vertical-align:top;margin-top:8px}
+.banner-sub{font-size:14px;color:rgba(240,237,230,.65);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px}
+.banner-search{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:30px;padding:10px 18px;max-width:400px;margin:0 auto;backdrop-filter:blur(4px)}
+.banner-search input{flex:1;background:none;border:none;outline:none;color:var(--cream);font-size:14px;font-family:'DM Sans',sans-serif}
+.banner-search input::placeholder{color:rgba(240,237,230,.5)}
+.banner-search-icon{font-size:16px;color:rgba(240,237,230,.5);flex-shrink:0}
+
+/* SECCIÓN DESTACADOS */
+.section{padding:20px 20px 0}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--black);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-title span{font-size:13px;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--gray);letter-spacing:0}
+
+.destacados-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px}
+
+/* CATEGORÍAS */
+.cats-header{padding:20px 20px 8px}
+.cats-header h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--black)}
+.cats-header p{font-size:13px;color:var(--gray);margin-top:4px}
+.cats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:8px 20px 32px}
+.cat-card{position:relative;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;background:var(--cream2);transition:transform .15s}
+.cat-card:hover{transform:scale(1.02)}
+.cat-card img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.cat-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,rgba(0,0,0,.1) 50%,transparent 100%)}
+.cat-card-label{position:absolute;bottom:0;left:0;right:0;padding:16px 14px}
+.cat-card-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#fff;line-height:1}
+.cat-card-count{font-size:12px;color:rgba(255,255,255,.75);margin-top:3px}
+.cat-card-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;position:absolute;top:0;left:0}
+
+.skeleton-cat{border-radius:14px;aspect-ratio:3/4;background:linear-gradient(90deg,var(--cream2) 25%,var(--cream) 50%,var(--cream2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* VISTA PRODUCTOS */
+#view-products{display:none}
+.prods-header{padding:14px 20px;display:flex;align-items:center;gap:12px;background:var(--white);border-bottom:0.5px solid var(--border);position:sticky;top:60px;z-index:50}
+.back-cat{background:none;border:none;cursor:pointer;font-size:20px;color:var(--black);padding:0;line-height:1}
+.prods-header-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.5px}
+.prods-count{font-size:12px;color:var(--gray);margin-left:auto}
+
+.search-wrap{padding:10px 20px;background:var(--cream);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.search-wrap input{flex:1;border:0.5px solid #c8c5be;border-radius:8px;padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black);outline:none;transition:border-color .2s}
+.search-wrap input:focus{border-color:var(--black)}
+
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px 20px 24px;background:var(--cream);min-height:200px}
+
+/* CARDS */
+.prod-card{background:var(--white);border:0.5px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .15s,transform .15s;animation:fadeIn .3s ease both}
+.prod-card:hover{border-color:#aaa;transform:translateY(-2px)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.prod-img-wrap{width:100%;aspect-ratio:1;background:var(--cream2);position:relative;overflow:hidden;cursor:default}
+.prod-img-wrap img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;transition:opacity .35s}
+.prod-img-wrap img.hidden{opacity:0;pointer-events:none}
+.img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:32px;position:absolute;top:0;left:0}
+
+.prod-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.88);border:none;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--black);z-index:3;font-size:16px;opacity:0;transition:opacity .15s;line-height:1}
+.prod-img-wrap:hover .prod-nav{opacity:1}
+.prod-nav.prev{left:5px}
+.prod-nav.next{right:5px}
+
+.prod-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2}
+.prod-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5);border:none;padding:0;transition:background .2s;cursor:pointer}
+.prod-dot.active{background:#fff}
+
+.foto-count{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.45);color:#fff;border-radius:20px;padding:3px 7px;font-size:10px;font-weight:500;z-index:2}
+
+/* BADGES */
+.badge-nuevo{position:absolute;top:7px;right:7px;background:#e25c2b;color:#fff;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;letter-spacing:.5px;z-index:2;text-transform:uppercase}
+
+.prod-info{padding:11px 13px 14px;cursor:pointer}
+.prod-info:hover .prod-nombre{text-decoration:underline;text-underline-offset:2px}
+.prod-nombre{font-size:13px;font-weight:500;color:var(--black);margin-bottom:5px;line-height:1.35}
+.prod-precio{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--black);letter-spacing:.5px}
+.prod-precio-ef{font-size:11px;color:#2d7a2d;font-weight:600;margin-top:2px}
+.prod-cuotas{font-size:11px;color:#1a5fa8;font-weight:500;margin-top:2px}
+.ver-mas{font-size:11px;color:var(--gray);margin-top:4px}
+
+.skeleton-prod{background:linear-gradient(90deg,var(--cream2) 25%,var(--cream) 50%,var(--cream2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:14px;height:240px}
+
+.no-results{grid-column:1/-1;text-align:center;padding:60px 0;color:#bbb;font-size:14px}
+
+/* BUSCADOR GLOBAL RESULTADO */
+.global-search-results{display:none;padding:12px 20px 28px;background:var(--cream)}
+.global-search-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.global-search-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.5px}
+.global-search-clear{background:none;border:0.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;color:var(--gray);font-family:'DM Sans',sans-serif}
+
+/* CARRITO */
+.cart-panel{background:var(--white);border-top:1px solid var(--border);padding:20px 20px 32px}
+.cart-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--black);margin-bottom:14px}
+.cart-empty{font-size:13px;color:#bbb;padding:8px 0}
+.cart-items{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+.cart-item{display:flex;align-items:center;font-size:13px;padding:8px 12px;background:var(--cream);border-radius:9px;gap:8px}
+.cart-item-name{color:var(--black);flex:1;font-weight:500}
+.cart-item-price{color:var(--gray);font-size:12px;white-space:nowrap}
+.cart-item-rm{background:none;border:none;color:#ccc;cursor:pointer;font-size:18px;padding:0;line-height:1}
+.cart-item-rm:hover{color:var(--black)}
+.cart-total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:0.5px solid var(--border);color:var(--black);font-weight:600;font-size:14px}
+.cart-total-val{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.5px}
+.wa-btn{width:100%;background:var(--wa);color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px;transition:background .15s}
+.wa-btn:hover{background:#1ebe5c}
+
+/* BOTÓN VOLVER ARRIBA */
+.back-top{position:fixed;bottom:24px;right:20px;background:var(--black);color:var(--cream);border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:50;transition:opacity .2s}
+.back-top.visible{display:flex}
+.back-top:hover{opacity:.85}
+
+.footer{background:var(--black);color:var(--cream);text-align:center;padding:20px;font-size:12px;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;opacity:.7}
+
+@media(max-width:400px){
+  .cats-grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:8px 14px 28px}
+  .products,.destacados-grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 14px 20px}
+  .section{padding:16px 14px 0}
+  .banner-logo{font-size:42px}
+  .cart-panel{padding:18px 14px 28px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" onclick="volverInicio()">Legión<span class="logo-dot"></span></div>
+  <button class="cart-btn" onclick="scrollToCart()">
+    🛍️ Mi pedido <span class="cart-badge" id="cart-count">0</span>
+  </button>
+</header>
+
+<!-- VISTA INICIO -->
+<div id="view-cats">
+  <!-- Banner -->
+  <div class="banner">
+    <div class="banner-logo">Legión<span class="banner-logo-dot"></span></div>
+    <div class="banner-sub">Tienda online</div>
+    <div class="banner-search">
+      <span class="banner-search-icon">🔍</span>
+      <input type="text" id="global-search" placeholder="Buscar productos..." oninput="buscarGlobal()">
+    </div>
+  </div>
+
+  <!-- Resultados búsqueda global -->
+  <div id="global-results" class="global-search-results">
+    <div class="global-search-header">
+      <div class="global-search-title" id="global-results-title"></div>
+      <button class="global-search-clear" onclick="limpiarBusqueda()">× Limpiar</button>
+    </div>
+    <div class="products" id="global-results-grid"></div>
+  </div>
+
+  <!-- Destacados -->
+  <div id="section-destacados" style="display:none">
+    <div class="section">
+      <div class="section-title">⭐ Destacados</div>
+      <div class="destacados-grid" id="destacados-grid"></div>
+    </div>
+  </div>
+
+  <!-- Categorías -->
+  <div id="section-cats">
+    <div class="cats-header">
+      <h2>Nuestros productos</h2>
+      <p>Seleccioná una categoría para explorar</p>
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
+  </div>
+</div>
+
+<!-- VISTA PRODUCTOS DE CATEGORÍA -->
+<div id="view-products">
+  <div class="prods-header">
+    <button class="back-cat" onclick="volverInicio()">←</button>
+    <div class="prods-header-title" id="cat-title"></div>
+    <div class="prods-count" id="cat-count"></div>
+  </div>
+  <div class="search-wrap">
+    <span style="font-size:16px;color:var(--gray)">🔍</span>
+    <input type="text" id="search-input" placeholder="Buscar en esta categoría..." oninput="filtrar()">
+  </div>
+  <div class="products" id="products-grid"></div>
+</div>
+
+<!-- CARRITO -->
+<div class="cart-panel" id="cart-panel">
+  <div class="cart-title">🛒 Tu pedido</div>
+  <div class="cart-empty" id="cart-empty">Entrá a un producto y agregalo a tu pedido.</div>
+  <div class="cart-items" id="cart-items" style="display:none"></div>
+  <div class="cart-total" id="cart-total" style="display:none">
+    <span>Total estimado</span>
+    <span class="cart-total-val" id="total-val">$0</span>
+  </div>
+  <button class="wa-btn" id="wa-btn" onclick="sendWhatsApp()" style="display:none">
+    💬 Consultar por WhatsApp
+  </button>
+</div>
+
+<button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Volver arriba">↑</button>
+
+<div class="footer">LEGIÓN · CATÁLOGO ONLINE</div>
+
+<script>
+const SUPABASE_URL = "https://mhycunflnwbmtmnvoswr.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oeWN1bmZsbndibXRtbnZvc3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzM1NzIsImV4cCI6MjA5NTY0OTU3Mn0.VgbAYOI7SHbgjy2GaVqewgaUezV-ohfM24N91xshics";
+const WA_NUMBER = "5493854000000";
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let todosProductos = [];
+let productosCat = [];
+let imgIdx = {};
+let carrito = JSON.parse(sessionStorage.getItem("legion_carrito") || "[]");
+let searchTimeout = null;
+
+const CAT_EMOJIS = {"Mochilas":"🎒","Bandoleras":"👜","Totes":"🛍️","Riñoneras":"👝","Materas":"🧉","Indumentaria":"👕","Calzado":"👟","Accesorios":"💼"};
+
+function guardarCarrito(){ sessionStorage.setItem("legion_carrito", JSON.stringify(carrito)); }
+
+async function init(){
+  document.getElementById("cats-grid").innerHTML = Array(6).fill(`<div class="skeleton-cat"></div>`).join("");
+  const { data, error } = await db.from("productos").select("*").eq("disponible", true).order("categoria").order("nombre");
+  if(error || !data){ return; }
+  todosProductos = data;
+  renderDestacados();
+  renderCategorias();
+  updateCart();
+  if(window.location.hash==="#carrito") setTimeout(()=>document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}),500);
+}
+
+function renderDestacados(){
+  const dest = todosProductos.filter(p => p.destacado);
+  const sec = document.getElementById("section-destacados");
+  if(!dest.length){ sec.style.display = "none"; return; }
+  sec.style.display = "block";
+  document.getElementById("destacados-grid").innerHTML = dest.map(p => prodCardHTML(p)).join("");
+}
+
+function renderCategorias(){
+  const cats = {};
+  todosProductos.forEach(p => { if(!cats[p.categoria]) cats[p.categoria]=[]; cats[p.categoria].push(p); });
+  const grid = document.getElementById("cats-grid");
+  if(!Object.keys(cats).length){ grid.innerHTML=`<p style="grid-column:1/-1;padding:20px;color:var(--gray);text-align:center">No hay productos</p>`; return; }
+  grid.innerHTML = Object.entries(cats).map(([cat, prods]) => {
+    const prodsConFotos = prods.filter(p => p.fotos?.length);
+    let fotoUrl = null;
+    if(prodsConFotos.length){
+      const r = prodsConFotos[Math.floor(Math.random()*prodsConFotos.length)];
+      fotoUrl = r.fotos[0];
+    }
+    const emoji = CAT_EMOJIS[cat]||"📦";
+    return `<div class="cat-card" onclick="abrirCategoria('${cat}')">
+      ${fotoUrl ? `<img src="${fotoUrl}" alt="${cat}" loading="lazy" onerror="this.style.display='none'">` : `<div class="cat-card-ph">${emoji}</div>`}
+      <div class="cat-card-overlay"></div>
+      <div class="cat-card-label">
+        <div class="cat-card-name">${cat}</div>
+        <div class="cat-card-count">${prods.length} producto${prods.length!==1?'s':''}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function prodCardHTML(p){
+  if(imgIdx[p.id]===undefined) imgIdx[p.id]=0;
+  const idx = imgIdx[p.id];
+  const fotos = p.fotos||[];
+  const multi = fotos.length>1;
+  const imgs = fotos.length ? fotos.map((f,i)=>`<img src="${f}" class="${i===idx?'':'hidden'}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">`).join("") : `<div class="img-ph">📦</div>`;
+  const dots = multi ? `<div class="prod-dots">${fotos.map((_,i)=>`<button class="prod-dot ${i===idx?'active':''}" onclick="event.stopPropagation();setImg(${p.id},${i})"></button>`).join("")}</div>` : "";
+  const navs = multi ? `<button class="prod-nav prev" onclick="event.stopPropagation();navImg(${p.id},-1)">‹</button><button class="prod-nav next" onclick="event.stopPropagation();navImg(${p.id},1)">›</button>` : "";
+  const counter = multi ? `<div class="foto-count">📷 ${fotos.length}</div>` : "";
+  const badgeNuevo = p.es_nuevo ? `<div class="badge-nuevo">Nuevo</div>` : "";
+  return `<div class="prod-card">
+    <div class="prod-img-wrap">
+      ${imgs}${counter}${badgeNuevo}${dots}${navs}
+    </div>
+    <div class="prod-info" onclick="window.location.href='producto.html?id=${p.id}'">
+      <div class="prod-nombre">${p.nombre}</div>
+      <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
+      <div class="prod-precio-ef">💵 Efectivo/transf: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')}</div>
+      <div class="prod-cuotas">💳 3 cuotas de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
+      <div class="ver-mas">Ver detalle →</div>
+    </div>
+  </div>`;
+}
+
+function abrirCategoria(cat){
+  productosCat = todosProductos.filter(p=>p.categoria===cat);
+  imgIdx = {};
+  document.getElementById("view-cats").style.display="none";
+  document.getElementById("view-products").style.display="block";
+  document.getElementById("cat-title").textContent=cat;
+  document.getElementById("cat-count").textContent=`${productosCat.length} producto${productosCat.length!==1?'s':''}`;
+  document.getElementById("search-input").value="";
+  renderProductos();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function volverInicio(){
+  document.getElementById("view-cats").style.display="block";
+  document.getElementById("view-products").style.display="none";
+  limpiarBusqueda();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function filtrar(){ renderProductos(); }
+
+function renderProductos(){
+  const q = document.getElementById("search-input").value.toLowerCase();
+  const grid = document.getElementById("products-grid");
+  const filtrados = productosCat.filter(p=>p.nombre.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q));
+  if(!filtrados.length){ grid.innerHTML=`<div class="no-results"><div style="font-size:36px;margin-bottom:10px">🔍</div>No encontramos productos</div>`; return; }
+  grid.innerHTML = filtrados.map(p=>prodCardHTML(p)).join("");
+}
+
+function buscarGlobal(){
+  const q = document.getElementById("global-search").value.toLowerCase().trim();
+  const resultsDiv = document.getElementById("global-results");
+  const grid = document.getElementById("global-results-grid");
+  const title = document.getElementById("global-results-title");
+
+  if(!q){ resultsDiv.style.display="none"; document.getElementById("section-destacados").style.display = todosProductos.some(p=>p.destacado)?"block":"none"; document.getElementById("section-cats").style.display="block"; return; }
+
+  document.getElementById("section-destacados").style.display="none";
+  document.getElementById("section-cats").style.display="none";
+  resultsDiv.style.display="block";
+
+  const filtrados = todosProductos.filter(p=>p.nombre.toLowerCase().includes(q)||p.categoria.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q));
+  title.textContent = `${filtrados.length} resultado${filtrados.length!==1?'s':''} para "${q}"`;
+  grid.innerHTML = filtrados.length ? filtrados.map(p=>prodCardHTML(p)).join("") : `<div class="no-results"><div style="font-size:36px;margin-bottom:10px">🔍</div>No encontramos productos</div>`;
+}
+
+function limpiarBusqueda(){
+  document.getElementById("global-search").value="";
+  document.getElementById("global-results").style.display="none";
+  document.getElementById("section-destacados").style.display = todosProductos.some(p=>p.destacado)?"block":"none";
+  document.getElementById("section-cats").style.display="block";
+}
+
+function setImg(id,idx){ imgIdx[id]=idx; renderCurrentView(); }
+function navImg(id,dir){
+  const p=todosProductos.find(x=>x.id===id);
+  if(!p) return;
+  imgIdx[id]=((imgIdx[id]||0)+dir+(p.fotos?.length||1))%(p.fotos?.length||1);
+  renderCurrentView();
+}
+function renderCurrentView(){
+  if(document.getElementById("view-products").style.display!=="none") renderProductos();
+  else { renderDestacados(); const q=document.getElementById("global-search").value.trim(); if(q) buscarGlobal(); }
+}
+
+function removeFromCart(id){ carrito=carrito.filter(c=>c.id!==id); guardarCarrito(); updateCart(); }
+
+function updateCart(){
+  const count=document.getElementById("cart-count");
+  const empty=document.getElementById("cart-empty");
+  const items=document.getElementById("cart-items");
+  const total=document.getElementById("cart-total");
+  const waBtn=document.getElementById("wa-btn");
+  const totalVal=document.getElementById("total-val");
+  count.textContent=carrito.length;
+  if(!carrito.length){ empty.style.display="block";items.style.display="none";total.style.display="none";waBtn.style.display="none";return; }
+  empty.style.display="none";items.style.display="flex";total.style.display="flex";waBtn.style.display="flex";
+  items.innerHTML=carrito.map(p=>`<div class="cart-item"><span class="cart-item-name">${p.nombre}</span><span class="cart-item-price">$${Number(p.precio).toLocaleString('es-AR')}</span><button class="cart-item-rm" onclick="removeFromCart(${p.id})">×</button></div>`).join("");
+  totalVal.textContent="$"+carrito.reduce((a,p)=>a+Number(p.precio),0).toLocaleString('es-AR');
+}
+
+function scrollToCart(){ document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}); }
+
+function sendWhatsApp(){
+  if(!carrito.length) return;
+  const lineas=carrito.map(p=>`• ${p.nombre} — $${Number(p.precio).toLocaleString('es-AR')}`).join("\n");
+  const total=carrito.reduce((a,p)=>a+Number(p.precio),0);
+  const msg=`Hola Legión! 👋 Me interesan estos productos:\n\n${lineas}\n\nTotal estimado: $${total.toLocaleString('es-AR')}\n\n¿Tienen disponibilidad?`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// Botón volver arriba
+window.addEventListener("scroll",()=>{
+  document.getElementById("back-top").classList.toggle("visible", window.scrollY > 300);
+});
+
+init();
+</script>
+</body>
+</html>
