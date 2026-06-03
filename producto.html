@@ -110,6 +110,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black)
 .error-icon{font-size:48px}
 .btn-volver{background:var(--black);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;margin-top:8px}
 
+.btn-compartir{width:100%;background:transparent;color:var(--black);border:1.5px solid var(--border);border-radius:10px;padding:13px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,background .15s}
+.btn-compartir:hover{border-color:var(--black);background:var(--cream)}
 .footer{background:var(--black);color:var(--cream);text-align:center;padding:18px;font-size:12px;font-family:'Bebas Neue',sans-serif;letter-spacing:1.5px;opacity:.65}
 </style>
 </head>
@@ -236,6 +238,9 @@ function renderProducto(){
         <button class="btn-wa" onclick="waEsteProducto()">
           💬 Consultar por WhatsApp
         </button>
+        <button class="btn-compartir" onclick="compartirProducto()">
+          🔗 Compartir producto
+        </button>
         ${acordeones}
       </div>
     </div>
@@ -282,6 +287,29 @@ function toggleCarrito(){
   if(btn){
     btn.textContent = enCarrito ? '✓ Agregado — tocá para quitar' : '＋ Agregar al pedido';
     btn.classList.toggle("en-carrito", !!enCarrito);
+  }
+}
+
+function compartirProducto(){
+  const p = producto;
+  const url = `https://legion-sde.vercel.app/producto.html?id=${p.id}`;
+  const msg = `👜 *${p.nombre}*
+💲 $${Number(p.precio).toLocaleString('es-AR')}
+💵 Efectivo/transf: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')}
+💳 3 cuotas de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}
+
+🔗 Ver producto: ${url}`;
+  
+  // Intentar Web Share API primero (mobile)
+  if(navigator.share){
+    navigator.share({
+      title: `Legión — ${p.nombre}`,
+      text: `${p.nombre} — $${Number(p.precio).toLocaleString('es-AR')}`,
+      url: url
+    }).catch(()=>{});
+  } else {
+    // Fallback: compartir por WhatsApp
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   }
 }
 
