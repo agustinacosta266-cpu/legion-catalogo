@@ -31,6 +31,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
 .banner-search input::placeholder{color:rgba(240,237,230,.5)}
 .banner-search-icon{font-size:16px;color:rgba(240,237,230,.5);flex-shrink:0}
 
+/* BOTÓN DÍA DEL PADRE */
+.btn-papa{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 20px 0;background:linear-gradient(135deg,#7B3F00,#C0622A);color:#fff;border:none;border-radius:14px;padding:16px 20px;cursor:pointer;transition:opacity .15s;width:calc(100% - 40px)}
+.btn-papa:hover{opacity:.9}
+.btn-papa-icon{font-size:24px}
+.btn-papa-text{text-align:left}
+.btn-papa-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;line-height:1}
+.btn-papa-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:2px}
+
+/* SECCIÓN DÍA DEL PADRE */
+.papa-section{display:none;padding:20px 20px 0}
+.papa-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.papa-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--black);display:flex;align-items:center;gap:8px}
+.papa-close{background:none;border:0.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;color:var(--gray);font-family:'DM Sans',sans-serif}
+.papa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+
 /* SECCIÓN DESTACADOS */
 .section{padding:20px 20px 0}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--black);margin-bottom:14px;display:flex;align-items:center;gap:10px}
@@ -162,6 +177,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
     </div>
   </div>
 
+  <!-- Botón Día del Padre -->
+  <div id="btn-papa-wrap" style="padding:16px 0 4px">
+    <button class="btn-papa" onclick="toggleSeccionPapa()">
+      <span class="btn-papa-icon">👔</span>
+      <div class="btn-papa-text">
+        <div class="btn-papa-title">Especial Día del Padre</div>
+        <div class="btn-papa-sub">En Legión también hay para él</div>
+      </div>
+      <span style="margin-left:auto;font-size:18px" id="papa-arrow">›</span>
+    </button>
+  </div>
+
+  <!-- Sección Día del Padre -->
+  <div class="papa-section" id="papa-section">
+    <div class="papa-header">
+      <div class="papa-title">👔 Para papá</div>
+      <button class="papa-close" onclick="toggleSeccionPapa()">× Cerrar</button>
+    </div>
+    <div class="papa-grid" id="papa-grid"></div>
+  </div>
+
   <!-- Resultados búsqueda global -->
   <div id="global-results" class="global-search-results">
     <div class="global-search-header">
@@ -174,7 +210,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
   <!-- Destacados -->
   <div id="section-destacados" style="display:none">
     <div class="section">
-      <div class="section-title">⭐ Destacados</div>
+      <div class="section-title">🎁 Ideales para regalar a papá</div>
       <div class="destacados-grid" id="destacados-grid"></div>
     </div>
   </div>
@@ -248,6 +284,25 @@ async function init(){
   renderCategorias();
   updateCart();
   if(window.location.hash==="#carrito") setTimeout(()=>document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}),500);
+}
+
+function toggleSeccionPapa(){
+  const sec = document.getElementById("papa-section");
+  const arrow = document.getElementById("papa-arrow");
+  const isOpen = sec.style.display === "block";
+  sec.style.display = isOpen ? "none" : "block";
+  arrow.textContent = isOpen ? "›" : "↓";
+  if(!isOpen) renderPapa();
+}
+
+function renderPapa(){
+  const papa = todosProductos.filter(p => p.dia_del_padre);
+  const grid = document.getElementById("papa-grid");
+  if(!papa.length){
+    grid.innerHTML = `<div class="no-results" style="grid-column:1/-1"><div style="font-size:32px;margin-bottom:8px">👔</div>Próximamente productos especiales para papá</div>`;
+    return;
+  }
+  grid.innerHTML = papa.map(p => prodCardHTML(p)).join("");
 }
 
 function renderDestacados(){
@@ -345,6 +400,8 @@ function buscarGlobal(){
 
   document.getElementById("section-destacados").style.display="none";
   document.getElementById("section-cats").style.display="none";
+  document.getElementById("btn-papa-wrap").style.display="none";
+  document.getElementById("papa-section").style.display="none";
   resultsDiv.style.display="block";
 
   const filtrados = todosProductos.filter(p=>p.nombre.toLowerCase().includes(q)||p.categoria.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q));
@@ -357,6 +414,7 @@ function limpiarBusqueda(){
   document.getElementById("global-results").style.display="none";
   document.getElementById("section-destacados").style.display = todosProductos.some(p=>p.destacado)?"block":"none";
   document.getElementById("section-cats").style.display="block";
+  document.getElementById("btn-papa-wrap").style.display="block";
 }
 
 function setImg(id,idx){ imgIdx[id]=idx; renderCurrentView(); }

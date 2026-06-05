@@ -198,6 +198,13 @@ textarea{resize:vertical;min-height:80px}
             <option value="true">🆕 Sí — muestra badge "Nuevo"</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Día del Padre</label>
+          <select id="f-dia-padre">
+            <option value="false">No</option>
+            <option value="true">👔 Sí — aparece en especial Día del Padre</option>
+          </select>
+        </div>
         <div class="form-group form-full" id="talles-group" style="display:none">
           <label>Talles disponibles <span style="font-weight:400;color:var(--gray)">(agregá cada talle y presioná Enter o el botón +)</span></label>
           <div class="talle-input-wrap">
@@ -486,7 +493,8 @@ async function guardarProducto() {
 
   const destacado = document.getElementById("f-destacado").value === "true";
   const es_nuevo = document.getElementById("f-nuevo").value === "true";
-  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, ...(foto_categoria !== null ? { foto_categoria } : {}) };
+  const dia_del_padre = document.getElementById("f-dia-padre").value === "true";
+  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, dia_del_padre, ...(foto_categoria !== null ? { foto_categoria } : {}) };
 
   let error;
   if (editandoId) {
@@ -526,6 +534,7 @@ function limpiarForm() {
   renderFotosActuales([]);
   document.getElementById("f-destacado").value = "false";
   document.getElementById("f-nuevo").value = "false";
+  document.getElementById("f-dia-padre").value = "false";
 }
 
 async function cargarProductos() {
@@ -552,7 +561,7 @@ async function cargarProductos() {
       <td><span class="cat-pill">${p.categoria}</span></td>
       <td><strong>$${Number(p.precio).toLocaleString('es-AR')}</strong></td>
       <td>${p.fotos?.length || 0} foto${p.fotos?.length !== 1 ? 's' : ''}</td>
-      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}</td>
+      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}</td>
       <td><div class="actions">
         <button class="btn btn-ghost btn-sm" onclick='editarProducto(${JSON.stringify(p)})'>✏️ Editar</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">🗑</button>
@@ -570,6 +579,7 @@ function editarProducto(p) {
   document.getElementById("f-disponible").value = p.disponible ? "true" : "false";
   document.getElementById("f-destacado").value = p.destacado ? "true" : "false";
   document.getElementById("f-nuevo").value = p.es_nuevo ? "true" : "false";
+  document.getElementById("f-dia-padre").value = p.dia_del_padre ? "true" : "false";
   archivosSeleccionados = [];
   fotoGPrincipal = 0;
   fotosActuales = p.fotos || [];
