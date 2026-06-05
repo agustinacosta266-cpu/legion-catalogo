@@ -292,7 +292,7 @@ function toggleCarrito(){
 
 function compartirProducto(){
   const p = producto;
-  const url = `https://legion-sde.vercel.app/producto.html?id=${p.id}`;
+  const url = `https://legionsde.com/producto.html?id=${p.id}`;
   const msg = `👜 *${p.nombre}*
 💲 $${Number(p.precio).toLocaleString('es-AR')}
 💵 Efectivo/transf: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')}
