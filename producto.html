@@ -44,6 +44,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black)
 .prod-precio-sub{font-size:12px;color:var(--gray);margin-bottom:28px;margin-top:4px}
 .prod-precio-ef{font-size:14px;color:#2d7a2d;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:8px}
 .prod-cuotas{font-size:14px;color:#1a5fa8;font-weight:500;margin-top:6px}
+.prod-naranja{font-size:14px;color:#E05A00;font-weight:500;margin-top:6px}
 .prod-precio-badge{background:#2d7a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 
 .btn-agregar{width:100%;background:var(--black);color:#fff;border:none;border-radius:10px;padding:16px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;transition:opacity .15s;margin-bottom:12px}
@@ -223,6 +224,7 @@ function renderProducto(){
         <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
         <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
         <div class="prod-cuotas">💳 3 cuotas sin interés de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
+        <div class="prod-naranja">🟠 4 cuotas sin interés con Naranja o Plan Z de $${Math.round(Number(p.precio)/4).toLocaleString('es-AR')}</div>
         <div class="prod-precio-sub">Precio de lista</div>
         ${(p.talles && p.talles.length) ? `
         <div class="talles-section">
