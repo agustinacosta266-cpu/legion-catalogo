@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ping — Legión</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<script>
+const { createClient } = supabase;
+
+const proyectos = [
+  {
+    nombre: "Legión Catálogo",
+    url: "https://mhycunflnwbmtmnvoswr.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oeWN1bmZsbndibXRtbnZvc3dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzM1NzIsImV4cCI6MjA5NTY0OTU3Mn0.VgbAYOI7SHbgjy2GaVqewgaUezV-ohfM24N91xshics"
+  },
+  {
+    nombre: "Santiago Reporta",
+    url: "https://fpjcpgdnxibigvpfkimz.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwamNwZ2RueGliaWd2cGZraW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDg0MzMsImV4cCI6MjA4OTY4NDQzM30.7OYUgboX6O86FIFKuZ7Tfpi3HT8iUgq-FA4O-T05FRI"
+  }
+];
+
+async function ping() {
+  for (const p of proyectos) {
+    try {
+      const db = createClient(p.url, p.key);
+      await fetch(`${p.url}/rest/v1/`, {
+        headers: { apikey: p.key, Authorization: `Bearer ${p.key}` }
+      });
+      console.log(`✓ ${p.nombre} — activo`);
+    } catch(e) {
+      console.log(`✓ ${p.nombre} — ping enviado`);
+    }
+  }
+  document.body.innerHTML = '<p style="font-family:sans-serif;padding:20px">✓ Ping enviado a todos los proyectos — ' + new Date().toLocaleString() + '</p>';
+}
+
+ping();
+</script>
+</body>
+</html>
