@@ -53,6 +53,12 @@ textarea{resize:vertical;min-height:80px}
 .foto-actual{position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:0.5px solid var(--border)}
 .foto-actual img{width:100%;height:100%;object-fit:cover}
 .foto-actual-rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+/* WINTER SALE */
+.sale-badge{display:inline-block;background:linear-gradient(135deg,#1a3a6b,#2563c4);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.5px}
+/* BUSCADOR LISTA */
+.lista-search-wrap{padding:14px 20px 10px;display:flex;align-items:center;gap:10px;border-bottom:0.5px solid var(--border)}
+.lista-search-wrap input{flex:1;border:0.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;font-family:"DM Sans",sans-serif;background:#fff;color:var(--black);outline:none}
+.lista-search-wrap input:focus{border-color:var(--black)}
 .talles-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .talle-chip{display:flex;align-items:center;gap:6px;background:var(--cream);border:0.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:13px;cursor:default}
 .talle-chip button{background:none;border:none;cursor:pointer;color:#bbb;font-size:15px;line-height:1;padding:0}
@@ -205,6 +211,17 @@ textarea{resize:vertical;min-height:80px}
             <option value="true">👔 Sí — aparece en especial Día del Padre</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Winter Sale ❄️</label>
+          <select id="f-en-sale" onchange="onSaleChange()">
+            <option value="false">No</option>
+            <option value="true">❄️ Sí — aparece en Winter Sale</option>
+          </select>
+        </div>
+        <div class="form-group" id="precio-sale-group" style="display:none">
+          <label>Precio Sale <span style="font-weight:400;color:var(--gray)">(dejar vacío para indumentaria — se calcula 30% automático)</span></label>
+          <input type="number" id="f-precio-sale" placeholder="Ej: 45000">
+        </div>
         <div class="form-group form-full" id="talles-group" style="display:none">
           <label>Talles disponibles <span style="font-weight:400;color:var(--gray)">(agregá cada talle y presioná Enter o el botón +)</span></label>
           <div class="talle-input-wrap">
@@ -253,6 +270,10 @@ textarea{resize:vertical;min-height:80px}
         <div class="section-title" style="margin:0">Productos cargados</div>
         <button class="btn btn-ghost btn-sm" onclick="cargarProductos()">↺ Actualizar</button>
       </div>
+      <div class="lista-search-wrap">
+        <span style="font-size:16px;color:#aaa">🔍</span>
+        <input type="text" id="lista-search" placeholder="Buscar producto en la lista..." oninput="filtrarLista()">
+      </div>
       <div id="tabla-container">
         <div class="empty-state"><div class="empty-icon">📦</div>Cargando...</div>
       </div>
@@ -274,6 +295,7 @@ let fotoGPrincipal = 0;
 let archivoCat = null;
 let talles = []; // foto de portada de categoría // índice de la foto principal
 let editandoId = null;
+let productosCache = [];
 
 function showTab(tab) {
   document.getElementById("tab-agregar").style.display = tab === "agregar" ? "block" : "none";
@@ -349,6 +371,11 @@ function quitarFotoActual(i) {
   fotosActuales.splice(i, 1);
   renderFotosActuales(fotosActuales);
   // Si quedan fotos actuales, actualizarlas en el payload al guardar
+}
+
+function onSaleChange() {
+  const enSale = document.getElementById("f-en-sale").value === "true";
+  document.getElementById("precio-sale-group").style.display = enSale ? "block" : "none";
 }
 
 function onCatChange() {
@@ -494,7 +521,10 @@ async function guardarProducto() {
   const destacado = document.getElementById("f-destacado").value === "true";
   const es_nuevo = document.getElementById("f-nuevo").value === "true";
   const dia_del_padre = document.getElementById("f-dia-padre").value === "true";
-  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, dia_del_padre, ...(foto_categoria !== null ? { foto_categoria } : {}) };
+  const en_sale = document.getElementById("f-en-sale").value === "true";
+  const precio_sale_raw = document.getElementById("f-precio-sale").value;
+  const precio_sale = en_sale && precio_sale_raw ? parseFloat(precio_sale_raw) : null;
+  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, dia_del_padre, en_sale, precio_sale, ...(foto_categoria !== null ? { foto_categoria } : {}) };
 
   let error;
   if (editandoId) {
@@ -535,6 +565,44 @@ function limpiarForm() {
   document.getElementById("f-destacado").value = "false";
   document.getElementById("f-nuevo").value = "false";
   document.getElementById("f-dia-padre").value = "false";
+  document.getElementById("f-en-sale").value = "false";
+  document.getElementById("f-precio-sale").value = "";
+  document.getElementById("precio-sale-group").style.display = "none";
+}
+
+function filtrarLista() {
+  const q = document.getElementById("lista-search")?.value.toLowerCase().trim() || "";
+  const filtrados = q ? productosCache.filter(p =>
+    p.nombre.toLowerCase().includes(q) ||
+    p.categoria.toLowerCase().includes(q)
+  ) : productosCache;
+  renderTabla(filtrados);
+}
+
+function renderTabla(data) {
+  const cont = document.getElementById("tabla-container");
+  if(!data?.length) {
+    cont.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div>No se encontraron productos</div>`;
+    return;
+  }
+  cont.innerHTML = `<table class="prod-table">
+    <thead><tr>
+      <th></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Fotos</th><th>Estado</th><th>Flags</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>${data.map(p => `<tr>
+      <td>${p.fotos?.length ? `<img class="prod-thumb" src="${p.fotos[0]}" alt="${p.nombre}">` : `<div class="prod-thumb-ph">📦</div>`}</td>
+      <td><strong>${p.nombre}</strong></td>
+      <td><span class="cat-pill">${p.categoria}</span></td>
+      <td><strong>$${Number(p.precio).toLocaleString('es-AR')}</strong>${p.en_sale && p.precio_sale ? `<br><span style="font-size:11px;color:#2563c4">❄️ Sale: $${Number(p.precio_sale).toLocaleString('es-AR')}</span>` : p.en_sale ? `<br><span style="font-size:11px;color:#2563c4">❄️ -30% auto</span>` : ''}</td>
+      <td>${p.fotos?.length || 0} foto${p.fotos?.length !== 1 ? 's' : ''}</td>
+      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td>
+      <td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}${p.en_sale?'❄️':''}</td>
+      <td><div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick='editarProducto(${JSON.stringify(p)})'>✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id}, '${p.nombre.replace(/'/g, "\'")}')">🗑</button>
+      </div></td>
+    </tr>`).join("")}</tbody>
+  </table>`;
 }
 
 async function cargarProductos() {
@@ -545,6 +613,7 @@ async function cargarProductos() {
     cont.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div>${error ? "Error al cargar" : "No hay productos todavía"}</div>`;
     return;
   }
+  productosCache = data;
   cont.innerHTML = `<table class="prod-table">
     <thead><tr>
       <th></th>
@@ -561,7 +630,7 @@ async function cargarProductos() {
       <td><span class="cat-pill">${p.categoria}</span></td>
       <td><strong>$${Number(p.precio).toLocaleString('es-AR')}</strong></td>
       <td>${p.fotos?.length || 0} foto${p.fotos?.length !== 1 ? 's' : ''}</td>
-      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}</td>
+      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}${p.en_sale?'❄️':''}</td>
       <td><div class="actions">
         <button class="btn btn-ghost btn-sm" onclick='editarProducto(${JSON.stringify(p)})'>✏️ Editar</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">🗑</button>
@@ -580,6 +649,9 @@ function editarProducto(p) {
   document.getElementById("f-destacado").value = p.destacado ? "true" : "false";
   document.getElementById("f-nuevo").value = p.es_nuevo ? "true" : "false";
   document.getElementById("f-dia-padre").value = p.dia_del_padre ? "true" : "false";
+  document.getElementById("f-en-sale").value = p.en_sale ? "true" : "false";
+  document.getElementById("f-precio-sale").value = p.precio_sale || "";
+  document.getElementById("precio-sale-group").style.display = p.en_sale ? "block" : "none";
   archivosSeleccionados = [];
   fotoGPrincipal = 0;
   fotosActuales = p.fotos || [];

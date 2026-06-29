@@ -31,6 +31,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
 .banner-search input::placeholder{color:rgba(240,237,230,.5)}
 .banner-search-icon{font-size:16px;color:rgba(240,237,230,.5);flex-shrink:0}
 
+/* WINTER SALE */
+.btn-winter{display:flex;align-items:center;gap:12px;margin:0 20px;background:linear-gradient(135deg,#0a1f5c 0%,#1a3a8f 50%,#2563c4 100%);color:#fff;border:none;border-radius:14px;padding:16px 20px;cursor:pointer;transition:opacity .15s;width:calc(100% - 40px)}
+.btn-winter:hover{opacity:.9}
+.btn-winter-icon{font-size:28px;flex-shrink:0}
+.btn-winter-text{text-align:left;flex:1}
+.btn-winter-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;line-height:1;color:#fff}
+.btn-winter-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:3px}
+.btn-winter-dates{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+
+.winter-section{display:none;padding:0 20px 20px}
+.winter-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 14px;border-bottom:0.5px solid var(--border);margin-bottom:14px}
+.winter-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#0a1f5c;display:flex;align-items:center;gap:8px}
+.winter-close{background:none;border:0.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;color:var(--gray);font-family:'DM Sans',sans-serif}
+.winter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+
+.prod-precio-original{font-size:13px;color:#aaa;text-decoration:line-through;margin-top:2px}
+.prod-precio-sale{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#0a1f5c;letter-spacing:.5px}
+.prod-sale-badge{display:inline-block;background:#0a1f5c;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;letter-spacing:.5px}
+.prod-sale-condicion{font-size:10px;color:#666;margin-top:2px}
+
 /* SECCIÓN DESTACADOS */
 .section{padding:20px 20px 0}
 .section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--black);margin-bottom:14px;display:flex;align-items:center;gap:10px}
@@ -163,6 +183,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
     </div>
   </div>
 
+  <!-- Botón Winter Sale -->
+  <div id="btn-winter-wrap" style="padding:16px 0 4px">
+    <button class="btn-winter" onclick="toggleWinterSale()">
+      <span class="btn-winter-icon">❄️</span>
+      <div class="btn-winter-text">
+        <div class="btn-winter-title">WINTER SALE</div>
+        <div class="btn-winter-sub">Liquidación de temporada de invierno</div>
+        <div class="btn-winter-dates">Del 3 al 31 de julio</div>
+      </div>
+      <span style="margin-left:auto;font-size:20px" id="winter-arrow">›</span>
+    </button>
+  </div>
+
+  <!-- Sección Winter Sale -->
+  <div class="winter-section" id="winter-section">
+    <div class="winter-header">
+      <div class="winter-title">❄️ Winter Sale</div>
+      <button class="winter-close" onclick="toggleWinterSale()">× Cerrar</button>
+    </div>
+    <div class="winter-grid" id="winter-grid"></div>
+  </div>
+
   <!-- Resultados búsqueda global -->
   <div id="global-results" class="global-search-results">
     <div class="global-search-header">
@@ -248,7 +290,64 @@ async function init(){
   renderDestacados();
   renderCategorias();
   updateCart();
-  if(window.location.hash==="#carrito") setTimeout(()=>document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}),500);
+  // Mostrar Winter Sale solo entre el 3 y 31 de julio
+const hoy = new Date();
+const inicioSale = new Date(hoy.getFullYear(), 6, 3); // 3 de julio
+const finSale = new Date(hoy.getFullYear(), 6, 31, 23, 59); // 31 de julio
+const saleActiva = hoy >= inicioSale && hoy <= finSale && todosProductos.some(p=>p.en_sale);
+document.getElementById("btn-winter-wrap").style.display = saleActiva ? "block" : "none";
+
+if(window.location.hash==="#carrito") setTimeout(()=>document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}),500);
+}
+
+function toggleWinterSale(){
+  const sec = document.getElementById("winter-section");
+  const arrow = document.getElementById("winter-arrow");
+  const isOpen = sec.style.display === "block";
+  sec.style.display = isOpen ? "none" : "block";
+  arrow.textContent = isOpen ? "›" : "↓";
+  if(!isOpen) renderWinter();
+}
+
+function precioSaleProducto(p){
+  if(p.precio_sale) return p.precio_sale;
+  if(p.categoria === "Indumentaria") return Math.round(Number(p.precio) * 0.7);
+  return null;
+}
+
+function winterCardHTML(p){
+  const precioSale = precioSaleProducto(p);
+  const fotos = p.fotos||[];
+  const fotoMain = fotos[0]||null;
+  const descPct = p.precio_sale
+    ? Math.round((1 - p.precio_sale/Number(p.precio))*100)
+    : p.categoria === "Indumentaria" ? 30 : 0;
+
+  return `<div class="prod-card" onclick="window.location.href='producto.html?id=${p.id}'">
+    <div class="prod-img-wrap" style="cursor:pointer">
+      ${fotoMain ? `<img src="${fotoMain}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">` : `<div class="img-ph">📦</div>`}
+      ${descPct ? `<div class="badge-nuevo" style="background:#0a1f5c">-${descPct}%</div>` : ''}
+    </div>
+    <div class="prod-info" style="cursor:pointer">
+      <div class="prod-cat">${p.categoria}</div>
+      <div class="prod-nombre">${p.nombre}</div>
+      ${precioSale ? `
+        <div class="prod-precio-original">$${Number(p.precio).toLocaleString('es-AR')}</div>
+        <div class="prod-precio-sale">$${Number(precioSale).toLocaleString('es-AR')}<span class="prod-sale-badge">SALE</span></div>
+        <div class="prod-sale-condicion">Efectivo, transferencia o crédito 1 pago</div>
+      ` : `<div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>`}
+    </div>
+  </div>`;
+}
+
+function renderWinter(){
+  const productos = todosProductos.filter(p => p.en_sale);
+  const grid = document.getElementById("winter-grid");
+  if(!productos.length){
+    grid.innerHTML = `<div class="no-results" style="grid-column:1/-1"><div style="font-size:32px;margin-bottom:8px">❄️</div>Próximamente productos en sale</div>`;
+    return;
+  }
+  grid.innerHTML = productos.map(p => winterCardHTML(p)).join("");
 }
 
 function renderDestacados(){
@@ -347,6 +446,8 @@ function buscarGlobal(){
 
   document.getElementById("section-destacados").style.display="none";
   document.getElementById("section-cats").style.display="none";
+  document.getElementById("btn-winter-wrap").style.display="none";
+  document.getElementById("winter-section").style.display="none";
   resultsDiv.style.display="block";
 
   const filtrados = todosProductos.filter(p=>p.nombre.toLowerCase().includes(q)||p.categoria.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q));
@@ -359,6 +460,7 @@ function limpiarBusqueda(){
   document.getElementById("global-results").style.display="none";
   document.getElementById("section-destacados").style.display = todosProductos.some(p=>p.destacado)?"block":"none";
   document.getElementById("section-cats").style.display="block";
+  document.getElementById("btn-winter-wrap").style.display="block";
 }
 
 function setImg(id,idx){ imgIdx[id]=idx; renderCurrentView(); }
