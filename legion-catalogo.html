@@ -11,6 +11,12 @@
 :root{--cream:#F0EDE6;--cream2:#E8E4DC;--black:#111;--gray:#888;--border:#D5D2CB;--wa:#25D366;--white:#fff}
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black);min-height:100vh}
 
+/* BANNER ANUNCIO */
+.anuncio-bar{background:var(--black);color:var(--cream);text-align:center;padding:8px 40px;font-size:13px;font-weight:500;letter-spacing:.3px;position:relative}
+.anuncio-bar a{color:var(--cream);text-decoration:underline}
+.anuncio-close{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--cream);cursor:pointer;font-size:18px;opacity:.7;line-height:1}
+.anuncio-close:hover{opacity:1}
+
 /* HEADER */
 .header{background:var(--black);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--cream);letter-spacing:2px;display:flex;align-items:center;gap:4px;cursor:pointer}
@@ -74,6 +80,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
 
 .skeleton-cat{border-radius:14px;aspect-ratio:3/4;background:linear-gradient(90deg,var(--cream2) 25%,var(--cream) 50%,var(--cream2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* FILTRO PRECIO */
+.filtro-precio{padding:10px 20px;background:var(--white);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filtro-precio-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.filtro-precio-inputs{display:flex;align-items:center;gap:8px;flex:1}
+.filtro-precio-input{border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;width:110px;outline:none;background:#fff}
+.filtro-precio-input:focus{border-color:var(--black)}
+.filtro-precio-sep{color:var(--gray);font-size:13px}
+.filtro-precio-btn{background:var(--black);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap}
+.filtro-precio-clear{background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--gray);white-space:nowrap}
 
 /* VISTA PRODUCTOS */
 #view-products{display:none}
@@ -164,6 +180,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
 </head>
 <body>
 
+<div class="anuncio-bar" id="anuncio-bar">
+  🚚 Envíos a todo el país — Consultá por WhatsApp
+  <button class="anuncio-close" onclick="document.getElementById('anuncio-bar').style.display='none'">×</button>
+</div>
 <header class="header">
   <div class="logo" onclick="volverInicio()">Legión<span class="logo-dot"></span></div>
   <button class="cart-btn" onclick="scrollToCart()">
@@ -242,6 +262,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
     <span style="font-size:16px;color:var(--gray)">🔍</span>
     <input type="text" id="search-input" placeholder="Buscar en esta categoría..." oninput="filtrar()">
   </div>
+  <div class="filtro-precio">
+    <span class="filtro-precio-label">Precio</span>
+    <div class="filtro-precio-inputs">
+      <input type="number" class="filtro-precio-input" id="precio-min" placeholder="Mín." oninput="filtrar()">
+      <span class="filtro-precio-sep">—</span>
+      <input type="number" class="filtro-precio-input" id="precio-max" placeholder="Máx." oninput="filtrar()">
+    </div>
+    <button class="filtro-precio-clear" onclick="limpiarFiltros()">× Limpiar</button>
+  </div>
   <div class="products" id="products-grid"></div>
 </div>
 
@@ -285,7 +314,7 @@ async function init(){
   document.getElementById("cats-grid").innerHTML = Array(6).fill(`<div class="skeleton-cat"></div>`).join("");
   const { data, error } = await db.from("productos").select("*").eq("disponible", true).order("categoria").order("nombre");
   if(error || !data){ return; }
-  todosProductos = data;
+  todosProductos = data.sort((a,b) => (a.orden||0) - (b.orden||0));
   renderDestacados();
   renderCategorias();
   updateCart();
@@ -414,6 +443,8 @@ function abrirCategoria(cat){
   document.getElementById("cat-title").textContent=cat;
   document.getElementById("cat-count").textContent=`${productosCat.length} producto${productosCat.length!==1?'s':''}`;
   document.getElementById("search-input").value="";
+  document.getElementById("precio-min").value="";
+  document.getElementById("precio-max").value="";
   renderProductos();
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -427,10 +458,24 @@ function volverInicio(){
 
 function filtrar(){ renderProductos(); }
 
+function limpiarFiltros(){
+  document.getElementById("search-input").value = "";
+  document.getElementById("precio-min").value = "";
+  document.getElementById("precio-max").value = "";
+  renderProductos();
+}
+
 function renderProductos(){
   const q = document.getElementById("search-input").value.toLowerCase();
+  const pMin = parseFloat(document.getElementById("precio-min").value) || 0;
+  const pMax = parseFloat(document.getElementById("precio-max").value) || Infinity;
   const grid = document.getElementById("products-grid");
-  const filtrados = productosCat.filter(p=>p.nombre.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q));
+  const filtrados = productosCat.filter(p => {
+    const matchQ = p.nombre.toLowerCase().includes(q)||(p.descripcion||"").toLowerCase().includes(q);
+    const precio = Number(p.precio);
+    const matchPrecio = precio >= pMin && precio <= pMax;
+    return matchQ && matchPrecio;
+  });
   if(!filtrados.length){ grid.innerHTML=`<div class="no-results"><div style="font-size:36px;margin-bottom:10px">🔍</div>No encontramos productos</div>`; return; }
   grid.innerHTML = filtrados.map(p=>prodCardHTML(p)).join("");
 }
