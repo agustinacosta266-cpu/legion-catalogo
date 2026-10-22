@@ -50,9 +50,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black)
 .prod-nombre{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:.5px;line-height:1.05;margin-bottom:14px}
 .prod-precio{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.5px;margin-bottom:6px}
 .prod-precio-original{font-size:18px;color:#aaa;text-decoration:line-through;margin-bottom:4px}
-.prod-precio-sale{font-family:'Bebas Neue',sans-serif;font-size:40px;color:#0a1f5c;letter-spacing:.5px;margin-bottom:4px}
-.prod-sale-badge{display:inline-block;background:#0a1f5c;color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle}
-.prod-sale-condicion{font-size:13px;color:#0a1f5c;font-weight:500;margin-bottom:4px}
 .prod-precio-ef{font-size:14px;color:#2d7a2d;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:8px}
 .prod-precio-badge{background:#2d7a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 .prod-cuotas{font-size:14px;color:#1a5fa8;font-weight:500;margin-top:6px}
@@ -117,8 +114,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--black)
   .info-section{padding:20px 16px 32px}
   .prod-nombre{font-size:26px}
   .prod-precio{font-size:32px}
-  .prod-precio-sale{font-size:32px}
-}
+  }
 </style>
 </head>
 <body>
@@ -200,21 +196,13 @@ async function init(){
   actualizarFab();
 }
 
-function precioSaleProducto(p){
-  if(p.precio_sale) return p.precio_sale;
-  if(p.en_sale && p.categoria === "Indumentaria") return Math.round(Number(p.precio) * 0.7);
-  return null;
-}
 
 function renderProducto(){
   const p = producto;
   const fotos = p.fotos || [];
   const multi = fotos.length > 1;
   const enCarrito = carrito.find(c => c.id === p.id);
-  const precioSale = precioSaleProducto(p);
-  const descPct = precioSale ? Math.round((1 - precioSale/Number(p.precio))*100) : 0;
-
-  const thumbsHTML = fotos.length > 1 ? fotos.map((f,i) =>
+    const thumbsHTML = fotos.length > 1 ? fotos.map((f,i) =>
     `<img class="thumb ${i===fotoIdx?'active':''}" src="${f}" onclick="setFoto(${i})" alt="Foto ${i+1}" onerror="this.style.display='none'">`
   ).join("") : "";
 
@@ -222,11 +210,7 @@ function renderProducto(){
     ? fotos.map((f,i) => `<img src="${f}" class="${i===fotoIdx?'':'hidden'}" alt="${p.nombre}" onerror="this.style.display='none'">`).join("")
     : `<div class="img-ph">📦</div>`;
 
-  const precioHTML = precioSale ? `
-    <div class="prod-precio-original">$${Number(p.precio).toLocaleString('es-AR')}</div>
-    <div class="prod-precio-sale">$${Number(precioSale).toLocaleString('es-AR')}<span class="prod-sale-badge">-${descPct}% SALE</span></div>
-    <div class="prod-sale-condicion">Efectivo, transferencia o crédito 1 pago</div>
-  ` : `
+  const precioHTML = `
     <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
     <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
     <div class="prod-cuotas">💳 3 cuotas sin interés de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
