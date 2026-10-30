@@ -52,6 +52,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
 .cat-card-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff;line-height:1}
 .cat-card-count{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
 
+
+/* CYBER MONDAY */
+.cyber-banner{margin:16px 20px 4px;border-radius:16px;overflow:hidden;text-decoration:none;display:block;cursor:pointer;background:#003087;transition:transform .15s,opacity .15s;position:relative}
+.cyber-banner:hover{transform:scale(1.01);opacity:.95}
+.cyber-banner-inner{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cyber-logo{flex-shrink:0}
+.cyber-logo-box{background:#fff;border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.cyber-logo-cyber{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#003087;letter-spacing:2px}
+.cyber-logo-monday{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#003087;letter-spacing:3px}
+.cyber-banner-text{flex:1;text-align:left}
+.cyber-banner-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:#fff;line-height:1;margin-bottom:4px}
+.cyber-banner-sub{font-size:12px;color:rgba(255,255,255,.75);line-height:1.4}
+.cyber-banner-dates{display:inline-block;margin-top:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px}
+.cyber-banner-arrow{font-size:22px;color:rgba(255,255,255,.6)}
+
+.cyber-section{display:none;padding:0 20px 20px}
+.cyber-header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 12px;border-bottom:0.5px solid var(--border);margin-bottom:14px}
+.cyber-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#003087;display:flex;align-items:center;gap:8px}
+.cyber-close{background:none;border:0.5px solid var(--border);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;color:var(--gray);font-family:'DM Sans',sans-serif}
+.cyber-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.cyber-price-badge{display:inline-block;background:#003087;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle;letter-spacing:.5px}
+.cyber-price{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#003087;letter-spacing:.5px}
+.cyber-price-original{font-size:12px;color:var(--gray);text-decoration:line-through;margin-bottom:2px}
+.cyber-price-condicion{font-size:10px;color:#003087;font-weight:600;margin-top:2px}
+
 /* FILTRO PRECIO */
 .filtro-precio{padding:10px 20px;background:var(--white);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .filtro-precio-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
@@ -197,6 +222,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
     <div class="cats-grid" id="cats-grid"></div>
   </div>
 
+  <!-- Cyber Monday -->
+  <div id="cyber-wrap" style="display:none">
+    <a class="cyber-banner" onclick="toggleCyber()">
+      <div class="cyber-banner-inner">
+        <div class="cyber-logo">
+          <div class="cyber-logo-box">
+            <span class="cyber-logo-cyber">CYBER</span>
+            <span class="cyber-logo-monday">MONDAY</span>
+          </div>
+        </div>
+        <div class="cyber-banner-text">
+          <div class="cyber-banner-title">Ofertas especiales</div>
+          <div class="cyber-banner-sub">Precios únicos por tiempo limitado</div>
+          <span class="cyber-banner-dates">2, 3 y 4 de noviembre</span>
+        </div>
+        <span class="cyber-banner-arrow" id="cyber-arrow">›</span>
+      </div>
+    </a>
+    <div class="cyber-section" id="cyber-section">
+      <div class="cyber-header">
+        <div class="cyber-title">🔵 Cyber Monday</div>
+        <button class="cyber-close" onclick="toggleCyber()">× Cerrar</button>
+      </div>
+      <div class="cyber-grid" id="cyber-grid"></div>
+    </div>
+  </div>
+
   <!-- Botón Gift Card -->
   <div style="padding:4px 20px 24px">
     <a class="btn-gc" href="giftcard.html">
@@ -276,10 +328,54 @@ async function init(){
   if(error || !data){ return; }
   todosProductos = data.sort((a,b) => (a.orden||0) - (b.orden||0));
   renderDestacados();
+
+  // Cyber Monday: activo 2-4 de noviembre
+  const hoy = new Date();
+  const inicioCyber = new Date(hoy.getFullYear(), 10, 2); // 2 nov
+  const finCyber = new Date(hoy.getFullYear(), 10, 4, 23, 59);
+  const cyberActivo = hoy >= inicioCyber && hoy <= finCyber && todosProductos.some(p=>p.en_sale && p.precio_sale);
+  if(cyberActivo) document.getElementById("cyber-wrap").style.display="block";
   renderCategorias();
   updateCart();
   
 if(window.location.hash==="#carrito") setTimeout(()=>document.getElementById("cart-panel").scrollIntoView({behavior:"smooth"}),500);
+}
+
+function toggleCyber(){
+  const sec = document.getElementById("cyber-section");
+  const arrow = document.getElementById("cyber-arrow");
+  const isOpen = sec.style.display === "block";
+  sec.style.display = isOpen ? "none" : "block";
+  arrow.textContent = isOpen ? "›" : "‹";
+  if(!isOpen) renderCyber();
+}
+
+function cyberCardHTML(p){
+  const precioSale = p.precio_sale;
+  const descPct = Math.round((1 - precioSale/Number(p.precio))*100);
+  const fotos = Array.isArray(p.fotos) ? p.fotos : (p.fotos ? JSON.parse(p.fotos) : []);
+  const foto = fotos[0] || "";
+  return `<div class="prod-card" onclick="window.location.href='producto.html?id=${p.id}'">
+    <div class="prod-img-wrap">
+      ${foto ? `<img src="${foto}" alt="${p.nombre}" loading="lazy" onerror="this.style.display='none'">` : `<div class="prod-img-ph">📦</div>`}
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">${p.nombre}</div>
+      <div class="cyber-price-original">$${Number(p.precio).toLocaleString('es-AR')}</div>
+      <div class="cyber-price">$${Number(precioSale).toLocaleString('es-AR')}<span class="cyber-price-badge">-${descPct}%</span></div>
+      <div class="cyber-price-condicion">Precio Cyber Monday</div>
+    </div>
+  </div>`;
+}
+
+function renderCyber(){
+  const productos = todosProductos.filter(p => p.en_sale && p.precio_sale);
+  const grid = document.getElementById("cyber-grid");
+  if(!productos.length){
+    grid.innerHTML = `<div class="no-results" style="grid-column:1/-1"><div style="font-size:32px;margin-bottom:8px">🔵</div>Próximamente las ofertas Cyber Monday</div>`;
+    return;
+  }
+  grid.innerHTML = productos.map(p => cyberCardHTML(p)).join("");
 }
 
 function renderDestacados(){

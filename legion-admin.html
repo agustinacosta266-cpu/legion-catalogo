@@ -210,6 +210,17 @@ textarea{resize:vertical;min-height:80px}
             <option value="true">👔 Sí — aparece en especial Día del Padre</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Cyber Monday 🔵</label>
+          <select id="f-en-sale" onchange="onCyberChange()">
+            <option value="false">No</option>
+            <option value="true">🔵 Sí — aparece en Cyber Monday</option>
+          </select>
+        </div>
+        <div class="form-group" id="cyber-precio-group" style="display:none">
+          <label>Precio Cyber Monday</label>
+          <input type="number" id="f-precio-sale" placeholder="Ej: 45000">
+        </div>
         <div class="form-group form-full" id="talles-group" style="display:none">
           <label>Talles disponibles <span style="font-weight:400;color:var(--gray)">(agregá cada talle y presioná Enter o el botón +)</span></label>
           <div class="talle-input-wrap">
@@ -396,6 +407,11 @@ function onCatChange() {
   document.getElementById("talles-group").style.display = mostrar ? "block" : "none";
 }
 
+function onCyberChange(){
+  const activo = document.getElementById("f-en-sale").value === "true";
+  document.getElementById("cyber-precio-group").style.display = activo ? "block" : "none";
+}
+
 function agregarTalle() {
   const input = document.getElementById("f-talle-input");
   const val = input.value.trim().toUpperCase();
@@ -533,7 +549,10 @@ async function guardarProducto() {
   const destacado = document.getElementById("f-destacado").value === "true";
   const es_nuevo = document.getElementById("f-nuevo").value === "true";
   const dia_del_padre = document.getElementById("f-dia-padre").value === "true";
-  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, dia_del_padre, ...(foto_categoria !== null ? { foto_categoria } : {}) };
+  const en_sale = document.getElementById("f-en-sale").value === "true";
+  const precio_sale_raw = document.getElementById("f-precio-sale").value;
+  const precio_sale = en_sale && precio_sale_raw ? parseFloat(precio_sale_raw) : null;
+  const payload = { nombre, categoria, precio, descripcion, disponible, fotos, talles, destacado, es_nuevo, dia_del_padre, en_sale, precio_sale, ...(foto_categoria !== null ? { foto_categoria } : {}) };
 
   let error;
   if (editandoId) {
@@ -574,6 +593,9 @@ function limpiarForm() {
   document.getElementById("f-destacado").value = "false";
   document.getElementById("f-nuevo").value = "false";
   document.getElementById("f-dia-padre").value = "false";
+  document.getElementById("f-en-sale").value = "false";
+  document.getElementById("f-precio-sale").value = "";
+  document.getElementById("cyber-precio-group").style.display = "none";
 }
 
 function filtrarLista() {
@@ -633,7 +655,7 @@ async function cargarProductos() {
       <td><span class="cat-pill">${p.categoria}</span></td>
       <td><strong>$${Number(p.precio).toLocaleString('es-AR')}</strong></td>
       <td>${p.fotos?.length || 0} foto${p.fotos?.length !== 1 ? 's' : ''}</td>
-      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}</td>
+      <td><span class="badge ${p.disponible ? 'badge-si' : 'badge-no'}">${p.disponible ? 'Disponible' : 'Oculto'}</span></td><td style="font-size:16px">${p.destacado?'⭐':''}${p.es_nuevo?'🆕':''}${p.dia_del_padre?'👔':''}${p.en_sale?'🔵':''}</td>
       <td><div class="actions">
         <button class="btn btn-ghost btn-sm" onclick='editarProducto(${JSON.stringify(p)})'>✏️ Editar</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">🗑</button>
@@ -652,6 +674,9 @@ function editarProducto(p) {
   document.getElementById("f-destacado").value = p.destacado ? "true" : "false";
   document.getElementById("f-nuevo").value = p.es_nuevo ? "true" : "false";
   document.getElementById("f-dia-padre").value = p.dia_del_padre ? "true" : "false";
+  document.getElementById("f-en-sale").value = p.en_sale ? "true" : "false";
+  document.getElementById("f-precio-sale").value = p.precio_sale || "";
+  document.getElementById("cyber-precio-group").style.display = p.en_sale ? "block" : "none";
   archivosSeleccionados = [];
   fotoGPrincipal = 0;
   fotosActuales = p.fotos || [];
