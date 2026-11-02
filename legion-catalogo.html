@@ -205,23 +205,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
     <div class="products" id="global-results-grid"></div>
   </div>
 
-  <!-- Destacados -->
-  <div id="section-destacados" style="display:none">
-    <div class="section">
-      <div class="section-title">⭐ Destacados</div>
-      <div class="destacados-grid" id="destacados-grid"></div>
-    </div>
-  </div>
-
-  <!-- Categorías -->
-  <div id="section-cats">
-    <div class="cats-header">
-      <h2>Nuestros productos</h2>
-      <p>Seleccioná una categoría para explorar</p>
-    </div>
-    <div class="cats-grid" id="cats-grid"></div>
-  </div>
-
   <!-- Cyber Monday -->
   <div id="cyber-wrap" style="display:none">
     <a class="cyber-banner" onclick="toggleCyber()">
@@ -247,6 +230,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--black)
       </div>
       <div class="cyber-grid" id="cyber-grid"></div>
     </div>
+  </div>
+
+  <!-- Destacados -->
+  <div id="section-destacados" style="display:none">
+    <div class="section">
+      <div class="section-title">⭐ Destacados</div>
+      <div class="destacados-grid" id="destacados-grid"></div>
+    </div>
+  </div>
+
+  <!-- Categorías -->
+  <div id="section-cats">
+    <div class="cats-header">
+      <h2>Nuestros productos</h2>
+      <p>Seleccioná una categoría para explorar</p>
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
   </div>
 
   <!-- Botón Gift Card -->
@@ -420,16 +420,24 @@ function prodCardHTML(p){
   const navs = multi ? `<button class="prod-nav prev" onclick="event.stopPropagation();navImg(${p.id},-1)">‹</button><button class="prod-nav next" onclick="event.stopPropagation();navImg(${p.id},1)">›</button>` : "";
   const counter = multi ? `<div class="foto-count">📷 ${fotos.length}</div>` : "";
   const badgeNuevo = p.es_nuevo ? `<div class="badge-nuevo">Nuevo</div>` : "";
+  const tieneCyber = p.en_sale && p.precio_sale;
+  const precioMostrar = tieneCyber ? Number(p.precio_sale) : Number(p.precio);
+  const descPct = tieneCyber ? Math.round((1 - Number(p.precio_sale)/Number(p.precio))*100) : 0;
+  const precioHTML = tieneCyber
+    ? `<div style="font-size:11px;color:var(--gray);text-decoration:line-through;margin-bottom:1px">$${Number(p.precio).toLocaleString('es-AR')}</div>
+       <div class="prod-precio" style="color:#003087">$${precioMostrar.toLocaleString('es-AR')}<span class="cyber-price-badge">-${descPct}%</span></div>
+       <div style="font-size:10px;color:#003087;font-weight:700;margin-top:2px">🔵 Precio Cyber Monday</div>`
+    : `<div class="prod-precio">$${precioMostrar.toLocaleString('es-AR')}</div>
+       <div class="prod-precio-ef">💵 Efectivo/transf: $${Math.round(precioMostrar*0.9).toLocaleString('es-AR')}</div>
+       <div class="prod-cuotas">💳 3 cuotas de $${Math.round(precioMostrar/3).toLocaleString('es-AR')}</div>
+       <div class="prod-naranja">🟠 4 cuotas sin interés de $${Math.round(precioMostrar/4).toLocaleString('es-AR')} con Naranja o Plan Z</div>`;
   return `<div class="prod-card">
     <div class="prod-img-wrap">
       ${imgs}${counter}${badgeNuevo}${dots}${navs}
     </div>
     <div class="prod-info" onclick="window.location.href='producto.html?id=${p.id}'">
       <div class="prod-nombre">${p.nombre}</div>
-      <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
-      <div class="prod-precio-ef">💵 Efectivo/transf: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')}</div>
-      <div class="prod-cuotas">💳 3 cuotas de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
-      <div class="prod-naranja">🟠 4 cuotas sin interés de $${Math.round(Number(p.precio)/4).toLocaleString('es-AR')} con Naranja o Plan Z</div>
+      ${precioHTML}
       <div class="ver-mas">Ver detalle →</div>
     </div>
   </div>`;

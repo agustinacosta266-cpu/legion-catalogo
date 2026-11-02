@@ -210,11 +210,19 @@ function renderProducto(){
     ? fotos.map((f,i) => `<img src="${f}" class="${i===fotoIdx?'':'hidden'}" alt="${p.nombre}" onerror="this.style.display='none'">`).join("")
     : `<div class="img-ph">📦</div>`;
 
-  const precioHTML = `
-    <div class="prod-precio">$${Number(p.precio).toLocaleString('es-AR')}</div>
-    <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(Number(p.precio)*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
-    <div class="prod-cuotas">💳 3 cuotas sin interés de $${Math.round(Number(p.precio)/3).toLocaleString('es-AR')}</div>
-    <div class="prod-naranja">🟠 4 cuotas sin interés de $${Math.round(Number(p.precio)/4).toLocaleString('es-AR')} con Naranja o Plan Z</div>
+  const tieneCyber = p.en_sale && p.precio_sale;
+  const precioBase = Number(p.precio);
+  const precioCyber = tieneCyber ? Number(p.precio_sale) : null;
+  const descPct = tieneCyber ? Math.round((1 - precioCyber/precioBase)*100) : 0;
+  const precioHTML = tieneCyber ? `
+    <div class="prod-precio-original">$${precioBase.toLocaleString('es-AR')}</div>
+    <div class="prod-precio" style="color:#003087">$${precioCyber.toLocaleString('es-AR')} <span style="background:#003087;color:#fff;font-size:14px;font-weight:700;padding:3px 10px;border-radius:20px;vertical-align:middle">-${descPct}%</span></div>
+    <div style="font-size:13px;color:#003087;font-weight:700;margin-top:4px;margin-bottom:2px">🔵 Precio Cyber Monday · 2, 3 y 4 de noviembre</div>
+    <div class="prod-precio-sub">Oferta por tiempo limitado</div>` : `
+    <div class="prod-precio">$${precioBase.toLocaleString('es-AR')}</div>
+    <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(precioBase*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
+    <div class="prod-cuotas">💳 3 cuotas sin interés de $${Math.round(precioBase/3).toLocaleString('es-AR')}</div>
+    <div class="prod-naranja">🟠 4 cuotas sin interés de $${Math.round(precioBase/4).toLocaleString('es-AR')} con Naranja o Plan Z</div>
     <div class="prod-precio-sub">Precio de lista</div>
   `;
 
