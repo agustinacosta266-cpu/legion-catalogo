@@ -216,8 +216,8 @@ function renderProducto(){
   const descPct = tieneCyber ? Math.round((1 - precioCyber/precioBase)*100) : 0;
   const precioHTML = tieneCyber ? `
     <div class="prod-precio-original">$${precioBase.toLocaleString('es-AR')}</div>
-    <div class="prod-precio" style="color:#003087">$${precioCyber.toLocaleString('es-AR')} <span style="background:#003087;color:#fff;font-size:14px;font-weight:700;padding:3px 10px;border-radius:20px;vertical-align:middle">-${descPct}%</span></div>
-    <div style="font-size:13px;color:#003087;font-weight:700;margin-top:4px;margin-bottom:2px">🔵 Precio Cyber Monday · 2, 3 y 4 de noviembre</div>
+    <div class="prod-precio">$${precioCyber.toLocaleString('es-AR')} <span style="background:#111;color:#F0EDE6;font-size:14px;font-weight:700;padding:3px 10px;border-radius:20px;vertical-align:middle">-${descPct}%</span></div>
+    <div style="margin-top:5px;margin-bottom:2px"><em style="font-family:Georgia,serif;font-style:italic;font-size:16px;font-weight:400;color:#111;letter-spacing:.5px">Sale</em></div>
     <div class="prod-precio-sub">Oferta por tiempo limitado</div>` : `
     <div class="prod-precio">$${precioBase.toLocaleString('es-AR')}</div>
     <div class="prod-precio-ef">💵 Efectivo / transferencia: $${Math.round(precioBase*0.9).toLocaleString('es-AR')} <span class="prod-precio-badge">10% OFF</span></div>
